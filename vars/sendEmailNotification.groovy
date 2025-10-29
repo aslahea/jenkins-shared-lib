@@ -1,4 +1,6 @@
-def call(String buildStatus = 'SUCCESS') {
+// lib (jenkins-shared-lib/vars/sendEmailNotification.groovy)
+
+def call(String buildStatus = 'SUCCESS', Map additionalLogs = [:]) { // Added additionalLogs parameter
 
     buildStatus = buildStatus ?: 'SUCCESS'
 
@@ -24,6 +26,28 @@ def call(String buildStatus = 'SUCCESS') {
         message = "Pipeline finished with status: ${buildStatus}."
     }
 
+    def logContent = ""
+    if (!additionalLogs.isEmpty()) {
+        logContent += "<hr/><h3>Detailed Logs:</h3>"
+        additionalLogs.each { logTitle, filePath ->
+            try {
+                // Ensure the file exists before attempting to read
+                if (fileExists(filePath)) {
+                    def fileText = readFile(filePath)
+                    logContent += "<h4>${logTitle} (${filePath}):</h4>"
+                    logContent += "<pre style='background-color:#f8f8f8; padding:10px; border:1px solid #ddd; overflow-x:auto;'>${fileText.encodeAsHTML()}</pre>" // encodeAsHTML to display raw text safely
+                } else {
+                    logContent += "<h4>${logTitle} (${filePath}):</h4>"
+                    logContent += "<p style='color:red;'><i>Log file not found: ${filePath}</i></p>"
+                }
+            } catch (e) {
+                logContent += "<h4>${logTitle} (${filePath}):</h4>"
+                logContent += "<p style='color:red;'><i>Error reading log file: ${e.getMessage()}</i></p>"
+            }
+        }
+    }
+
+
     def body = """
         <html>
         <body style="font-family:Arial, sans-serif;">
@@ -35,6 +59,7 @@ def call(String buildStatus = 'SUCCESS') {
                 <li><b>Triggered By:</b> ${env.BUILD_USER ?: 'Automated Trigger'}</li>
                 <li><b>Build URL:</b> <a href="${env.BUILD_URL}">${env.BUILD_URL}</a></li>
             </ul>
+            ${logContent}
             <p>Regards,<br><b>Jenkins CI/CD System</b></p>
         </body>
         </html>
