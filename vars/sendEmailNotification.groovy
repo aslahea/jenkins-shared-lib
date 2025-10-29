@@ -1,6 +1,9 @@
 // lib (jenkins-shared-lib/vars/sendEmailNotification.groovy)
 
-def call(String buildStatus = 'SUCCESS', Map additionalLogs = [:]) { // Added additionalLogs parameter
+// Import the necessary utility class
+import org.apache.commons.lang.StringEscapeUtils
+
+def call(String buildStatus = 'SUCCESS', Map additionalLogs = [:]) {
 
     buildStatus = buildStatus ?: 'SUCCESS'
 
@@ -31,11 +34,12 @@ def call(String buildStatus = 'SUCCESS', Map additionalLogs = [:]) { // Added ad
         logContent += "<hr/><h3>Detailed Logs:</h3>"
         additionalLogs.each { logTitle, filePath ->
             try {
-                // Ensure the file exists before attempting to read
                 if (fileExists(filePath)) {
                     def fileText = readFile(filePath)
+                    // Use StringEscapeUtils.escapeHtml instead of encodeAsHTML
+                    def escapedText = StringEscapeUtils.escapeHtml(fileText)
                     logContent += "<h4>${logTitle} (${filePath}):</h4>"
-                    logContent += "<pre style='background-color:#f8f8f8; padding:10px; border:1px solid #ddd; overflow-x:auto;'>${fileText.encodeAsHTML()}</pre>" // encodeAsHTML to display raw text safely
+                    logContent += "<pre style='background-color:#f8f8f8; padding:10px; border:1px solid #ddd; overflow-x:auto;'>${escapedText}</pre>"
                 } else {
                     logContent += "<h4>${logTitle} (${filePath}):</h4>"
                     logContent += "<p style='color:red;'><i>Log file not found: ${filePath}</i></p>"
