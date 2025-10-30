@@ -81,10 +81,4 @@ def call(String buildStatus = 'SUCCESS', Map additionalLogs = [:]) {
         body: body,
         mimeType: 'text/html'
     )
-    emailext(
-        to: 'mprabiya6@gmail.com',
-        subject: subject,
-        body: body,
-        mimeType: 'text/html'
-    )
 }
